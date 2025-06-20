@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HairDay - Agendamento para Barbearia</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icones (Lucide) -->
+    <script src="https://unpkg.com/lucide-react@latest/dist/lucide-react.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111111;
+            color: #EAEAEA;
+        }
+
+        /* Estilos personalizados para inputs e botões de horário */
+        .time-slot {
+            transition: all 0.2s ease-in-out;
+        }
+        .time-slot:not(.disabled):hover {
+            background-color: #D4B55F;
+            color: #111111;
+        }
+        .time-slot.selected {
+            background-color: #D4B55F;
+            color: #111111;
+            font-weight: 600;
+        }
+        .time-slot.disabled {
+            background-color: #2a2a2a;
+            color: #555555;
+            cursor: not-allowed;
+            border-color: #333333;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-black p-4">
+
+    <div id="app" class="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8 bg-[#1C1C1C] rounded-2xl p-8 shadow-2xl shadow-yellow-900/10">
+        
+        <!-- Coluna de Agendamento (Esquerda) -->
+        <div class="lg:col-span-2 bg-[#252525] p-8 rounded-xl flex flex-col">
+            <div class="flex items-center gap-3 mb-8">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D4B55F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                <h1 class="text-2xl font-bold text-white">Hair<span class="text-yellow-500">Day</span></h1>
+            </div>
+
+            <h2 class="text-2xl font-bold text-white">Agende um atendimento</h2>
+            <p class="text-gray-400 mt-2 mb-6 text-sm">Selecione data, horário e informe o nome do cliente para criar o agendamento.</p>
+
+            <form id="booking-form" class="flex flex-col flex-grow">
+                <!-- Seletor de Data -->
+                <div class="mb-6">
+                    <label for="date" class="block text-sm font-medium text-gray-300 mb-2">Data</label>
+                    <input type="date" id="date" name="date" class="w-full bg-[#333] border border-gray-600 rounded-lg p-2.5 text-white focus:ring-yellow-500 focus:border-yellow-500">
+                </div>
+
+                <!-- Seletor de Horários -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Horários</label>
+                    <div id="time-slots" class="space-y-4">
+                        <!-- Manhã -->
+                        <div>
+                            <p class="text-xs text-gray-400 mb-2">Manhã</p>
+                            <div class="grid grid-cols-4 gap-2">
+                                <button type="button" data-time="09:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">09:00</button>
+                                <button type="button" data-time="10:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">10:00</button>
+                                <button type="button" data-time="11:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">11:00</button>
+                                <button type="button" data-time="12:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">12:00</button>
+                            </div>
+                        </div>
+                        <!-- Tarde -->
+                        <div>
+                            <p class="text-xs text-gray-400 mb-2">Tarde</p>
+                            <div class="grid grid-cols-4 gap-2">
+                                <button type="button" data-time="13:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">13:00</button>
+                                <button type="button" data-time="14:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">14:00</button>
+                                <button type="button" data-time="15:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">15:00</button>
+                                <button type="button" data-time="16:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">16:00</button>
+                                <button type="button" data-time="17:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">17:00</button>
+                                <button type="button" data-time="18:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">18:00</button>
+                            </div>
+                        </div>
+                        <!-- Noite -->
+                        <div>
+                            <p class="text-xs text-gray-400 mb-2">Noite</p>
+                            <div class="grid grid-cols-4 gap-2">
+                                <button type="button" data-time="19:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">19:00</button>
+                                <button type="button" data-time="20:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">20:00</button>
+                                <button type="button" data-time="21:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">21:00</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campo do Cliente -->
+                <div class="mb-6">
+                    <label for="client-name" class="block text-sm font-medium text-gray-300 mb-2">Cliente</label>
+                    <div class="relative">
+                         <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        </div>
+                        <input type="text" id="client-name" name="client-name" class="w-full bg-[#333] border border-gray-600 rounded-lg p-2.5 pl-10 text-white focus:ring-yellow-500 focus:border-yellow-500" placeholder="Nome do cliente" required>
+                    </div>
+                </div>
+
+                <!-- Botão Agendar -->
+                <div class="mt-auto">
+                    <button type="submit" id="submit-button" class="w-full bg-[#D4B55F] text-[#111] font-bold py-3 rounded-lg hover:bg-yellow-500 transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed">
+                        AGENDAR
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Coluna da Agenda (Direita) -->
+        <div class="lg:col-span-3 p-8">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Sua agenda</h2>
+                    <p class="text-gray-400 mt-1 text-sm">Consulte os seus cortes de cabelo agendados por dia.</p>
+                </div>
+                <input type="date" id="view-date" name="view-date" class="bg-[#252525] border border-gray-600 rounded-lg p-2.5 text-white focus:ring-yellow-500 focus:border-yellow-500">
+            </div>
+
+            <div id="schedule-view" class="space-y-8">
+                <!-- Dados serão inseridos dinamicamente aqui -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Notificação -->
+    <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-[#252525] rounded-xl shadow-lg p-8 max-w-sm w-full text-center border-t-4 border-yellow-500">
+            <h3 id="notification-title" class="text-xl font-bold text-white mb-2"></h3>
+            <p id="notification-message" class="text-gray-300 mb-6"></p>
+            <button id="notification-close" class="bg-yellow-500 text-black font-bold px-6 py-2 rounded-lg hover:bg-yellow-600 transition-colors">OK</button>
+        </div>
+    </div>
+    </body>
+</html>
