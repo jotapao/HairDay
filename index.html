@@ -147,5 +147,213 @@
             <button id="notification-close" class="bg-yellow-500 text-black font-bold px-6 py-2 rounded-lg hover:bg-yellow-600 transition-colors">OK</button>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Elementos da UI
+            const appState = {
+                bookings: {
+                    '2025-06-20': [ // Data de hoje como exemplo
+                        { time: '11:00', client: 'Ryan Stewart' },
+                        { time: '13:00', client: 'Livia Curtis' },
+                        { time: '14:00', client: 'Randy Calzoni' },
+                        { time: '16:00', client: 'Marley Franci' },
+                        { time: '17:00', client: 'Jaylon Korigaard' },
+                        { time: '21:00', client: 'Maria Heinitz' },
+                    ]
+                },
+                selectedDate: null,
+                selectedTime: null,
+            };
+
+            const bookingForm = document.getElementById('booking-form');
+            const dateInput = document.getElementById('date');
+            const timeSlotsContainer = document.getElementById('time-slots');
+            const clientNameInput = document.getElementById('client-name');
+            const submitButton = document.getElementById('submit-button');
+
+            const viewDateInput = document.getElementById('view-date');
+            const scheduleView = document.getElementById('schedule-view');
+            
+            const notificationModal = document.getElementById('notification-modal');
+            const notificationTitle = document.getElementById('notification-title');
+            const notificationMessage = document.getElementById('notification-message');
+            const notificationCloseBtn = document.getElementById('notification-close');
+
+            // --- FUNÇÕES ---
+
+            // Converte data para o formato YYYY-MM-DD
+            function toISODateString(date) {
+                return new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+            }
+            
+            // Exibe o modal de notificação
+            function showNotification(title, message) {
+                notificationTitle.textContent = title;
+                notificationMessage.textContent = message;
+                notificationModal.classList.remove('hidden');
+            }
+
+            // Esconde o modal
+            notificationCloseBtn.addEventListener('click', () => {
+                notificationModal.classList.add('hidden');
+            });
+            
+            // Atualiza os horários disponíveis no formulário
+            function updateAvailableTimes() {
+                const date = appState.selectedDate;
+                if (!date) return;
+
+                const todaysBookings = appState.bookings[date] || [];
+                const bookedTimes = todaysBookings.map(b => b.time);
+
+                document.querySelectorAll('.time-slot').forEach(slot => {
+                    slot.classList.remove('disabled', 'selected');
+                    if (bookedTimes.includes(slot.dataset.time)) {
+                        slot.classList.add('disabled');
+                        slot.disabled = true;
+                    } else {
+                        slot.disabled = false;
+                    }
+
+                    if (slot.dataset.time === appState.selectedTime) {
+                         slot.classList.add('selected');
+                    }
+                });
+            }
+            
+            // Renderiza a visualização da agenda para a data selecionada
+            function renderScheduleView(date) {
+                scheduleView.innerHTML = ''; // Limpa a visualização
+                if (!date) {
+                    scheduleView.innerHTML = `<p class="text-gray-500 text-center">Selecione uma data para ver os agendamentos.</p>`;
+                    return;
+                }
+
+                const todaysBookings = appState.bookings[date] || [];
+                if (todaysBookings.length === 0) {
+                    scheduleView.innerHTML = `<p class="text-gray-500 text-center">Nenhum agendamento para esta data.</p>`;
+                    return;
+                }
+                
+                // Agrupa por período
+                const periods = {
+                    Manhã: { range: '09h-12h', bookings: [] },
+                    Tarde: { range: '13h-18h', bookings: [] },
+                    Noite: { range: '19h-21h', bookings: [] },
+                };
+
+                todaysBookings.sort((a, b) => a.time.localeCompare(b.time)).forEach(booking => {
+                    const hour = parseInt(booking.time.split(':')[0]);
+                    if (hour >= 9 && hour <= 12) periods.Manhã.bookings.push(booking);
+                    else if (hour >= 13 && hour <= 18) periods.Tarde.bookings.push(booking);
+                    else if (hour >= 19 && hour <= 21) periods.Noite.bookings.push(booking);
+                });
+
+                Object.entries(periods).forEach(([periodName, data]) => {
+                    if(data.bookings.length > 0) {
+                        const periodEl = document.createElement('div');
+                        periodEl.innerHTML = `
+                            <div class="flex items-center gap-4 mb-4 border-b border-gray-700 pb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4B55F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="M12 6v6l4 2"></path></svg>
+                                <h3 class="text-lg font-semibold text-white">${periodName}</h3>
+                                <span class="text-sm text-gray-400 ml-auto">${data.range}</span>
+                            </div>
+                            <div class="space-y-3 pl-9">
+                                ${data.bookings.map(b => `
+                                    <div class="flex items-center">
+                                        <p class="font-semibold text-white w-20">${b.time}</p>
+                                        <p class="text-gray-300">${b.client}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                        scheduleView.appendChild(periodEl);
+                    }
+                });
+            }
+
+            // --- EVENT LISTENERS ---
+
+            // Seleciona a data no formulário
+            dateInput.addEventListener('change', (e) => {
+                appState.selectedDate = e.target.value;
+                appState.selectedTime = null; // Reseta o horário ao mudar a data
+                document.querySelectorAll('.time-slot.selected').forEach(el => el.classList.remove('selected'));
+                updateAvailableTimes();
+            });
+
+            // Seleciona o horário no formulário
+            timeSlotsContainer.addEventListener('click', (e) => {
+                const button = e.target.closest('.time-slot');
+                if (button && !button.disabled) {
+                    // Desmarca o anterior
+                    const prevSelected = timeSlotsContainer.querySelector('.selected');
+                    if(prevSelected) prevSelected.classList.remove('selected');
+                    
+                    // Marca o novo
+                    button.classList.add('selected');
+                    appState.selectedTime = button.dataset.time;
+                }
+            });
+
+            // Submete o formulário de agendamento
+            bookingForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const clientName = clientNameInput.value.trim();
+
+                if (!appState.selectedDate || !appState.selectedTime || !clientName) {
+                    showNotification("Erro", "Por favor, preencha todos os campos: data, horário e nome do cliente.");
+                    return;
+                }
+
+                // Adiciona o agendamento
+                if (!appState.bookings[appState.selectedDate]) {
+                    appState.bookings[appState.selectedDate] = [];
+                }
+                appState.bookings[appState.selectedDate].push({
+                    time: appState.selectedTime,
+                    client: clientName,
+                });
+
+                // Atualiza a UI
+                if (appState.selectedDate === viewDateInput.value) {
+                    renderScheduleView(appState.selectedDate);
+                }
+                updateAvailableTimes();
+
+                // Limpa o formulário
+                bookingForm.reset();
+                timeSlotsContainer.querySelector('.selected')?.classList.remove('selected');
+                appState.selectedTime = null;
+                
+                showNotification("Sucesso!", "Agendamento realizado com sucesso.");
+            });
+            
+            // Muda a data de visualização da agenda
+            viewDateInput.addEventListener('change', (e) => {
+                renderScheduleView(e.target.value);
+            });
+
+            // --- INICIALIZAÇÃO ---
+            function init() {
+                const today = new Date();
+                const todayString = toISODateString(today);
+                
+                // Define as datas nos inputs
+                dateInput.value = todayString;
+                dateInput.min = todayString;
+                viewDateInput.value = todayString;
+                
+                appState.selectedDate = todayString;
+
+                // Renderiza a UI inicial
+                updateAvailableTimes();
+                renderScheduleView(todayString);
+            }
+            
+            init();
+        });
+    </script>
     </body>
 </html>
