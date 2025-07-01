@@ -1,847 +1,360 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dry Nails - Sistema de Agendamentos</title>
-    <!-- Carrega o Tailwind CSS (essencial para o design) -->
+    <title>HairDay - Agendamento para Barbearia</title>
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Carrega a fonte Inter e Dancing Script do Google Fonts -->
+    
+    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Carrega os ícones do Font Awesome (CORRIGIDO) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" xintegrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <!-- CSS Personalizado -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icones (Lucide) -->
+    <script src="https://unpkg.com/lucide-react@latest/dist/lucide-react.js"></script>
+    
     <style>
-        html, body {
-            height: 100%;
-        }
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #fce7f3; /* Fundo rosa claro */
+            background-color: #111111;
+            color: #EAEAEA;
         }
-        .logo-font {
-            font-family: 'Dancing Script', cursive;
+
+        /* Estilos personalizados para inputs e botões de horário */
+        .time-slot {
+            transition: all 0.2s ease-in-out;
         }
-        .card {
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
+        .time-slot:not(.disabled):hover {
+            background-color: #D4B55F;
+            color: #111111;
         }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-        }
-        .btn-primary {
-            background-color: #db2777; /* Cor rosa */
-            color: white;
-            transition: background-color 0.2s;
-        }
-        .btn-primary:hover {
-            background-color: #be185d;
-        }
-        .btn-secondary {
-            background-color: #9333ea; /* Cor roxa */
-            color: white;
-            transition: background-color 0.2s;
-        }
-        .btn-secondary:hover {
-            background-color: #7e22ce;
-        }
-        .btn-danger {
-            background-color: #dc2626; /* Cor vermelha */
-            color: white;
-            transition: background-color 0.2s;
-        }
-        .btn-danger:hover {
-            background-color: #b91c1c;
-        }
-        .paid-card {
-             background-color: #f0fdf4;
-             border-left: 5px solid #22c55e;
-        }
-        .unpaid-card {
-            border-left: 5px solid #f97316;
-        }
-        input[type="datetime-local"]::-webkit-calendar-picker-indicator,
-        input[type="date"]::-webkit-calendar-picker-indicator,
-        input[type="week"]::-webkit-calendar-picker-indicator,
-        input[type="month"]::-webkit-calendar-picker-indicator {
-            cursor: pointer;
-            filter: invert(50%) sepia(50%) saturate(500%) hue-rotate(280deg);
-        }
-        .modal-overlay {
-            transition: opacity 0.3s ease;
-        }
-        .modal-container {
-            transition: transform 0.3s ease;
-        }
-        .filter-btn.active {
-            background-color: #db2777;
-            color: white;
+        .time-slot.selected {
+            background-color: #D4B55F;
+            color: #111111;
             font-weight: 600;
         }
-        .service-checkbox-container {
-            max-height: 150px;
-            overflow-y: auto;
-        }
-        .day-header {
-            background-color: #fbcfe8;
-            color: #9d2463;
-        }
-        .day-header.today {
-            background-color: #db2777;
-            color: white;
+        .time-slot.disabled {
+            background-color: #2a2a2a;
+            color: #555555;
+            cursor: not-allowed;
+            border-color: #333333;
         }
     </style>
 </head>
-<body class="antialiased text-gray-800">
+<body class="flex items-center justify-center min-h-screen bg-black p-4">
 
-    <!-- Login Page -->
-    <div id="login-page" class="flex items-center justify-center h-full p-4">
-        <div class="w-full max-w-sm">
-            <div class="card p-8 text-center">
-                 <div class="logo-font text-5xl text-pink-600 mb-2">Dry Nails</div>
-                 <p class="text-gray-500 mb-6">Acessar o sistema</p>
-                <form id="login-form">
-                    <div class="mb-4 text-left">
-                        <label for="username" class="block text-sm font-medium text-gray-600 mb-1">Login</label>
-                        <input type="text" id="username" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500" required>
-                    </div>
-                    <div class="mb-6 text-left">
-                        <label for="password" class="block text-sm font-medium text-gray-600 mb-1">Senha</label>
-                        <input type="password" id="password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500" required>
-                    </div>
-                    <p id="login-error" class="text-red-500 text-sm text-center mb-4 hidden">Usuário ou senha inválidos.</p>
-                    <button type="submit" class="btn-primary font-bold w-full py-3 rounded-lg shadow-md">Entrar</button>
-                </form>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Main App Page (hidden by default) -->
-    <div id="app-page" class="hidden">
-        <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-7xl">
-
-            <!-- Header -->
-            <header class="flex justify-between items-center mb-8">
-                 <div class="logo-font text-5xl text-pink-600">Dry Nails</div>
-                 <button id="logout-btn" class="text-gray-500 hover:text-pink-600 font-semibold py-2 px-4 rounded-lg text-sm">
-                    Sair <i class="fas fa-sign-out-alt ml-1"></i>
-                </button>
-            </header>
-            
-            <div class="flex flex-wrap gap-4 justify-end mb-4">
-                 <button id="manage-services-btn" class="btn-secondary font-bold py-2 px-4 rounded-lg shadow-md text-sm">
-                    <i class="fas fa-cog mr-2"></i>Gerenciar Serviços
-                </button>
-                 <button id="add-expense-modal-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-md text-sm">
-                    <i class="fas fa-minus-circle mr-2"></i>Adicionar Gasto
-                </button>
-                 <button id="add-appointment-modal-btn" class="btn-primary font-bold py-2 px-4 rounded-lg shadow-md text-sm">
-                    <i class="fas fa-plus-circle mr-2"></i>Novo Agendamento
-                </button>
+    <div id="app" class="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8 bg-[#1C1C1C] rounded-2xl p-8 shadow-2xl shadow-yellow-900/10">
+        
+        <!-- Coluna de Agendamento (Esquerda) -->
+        <div class="lg:col-span-2 bg-[#252525] p-8 rounded-xl flex flex-col">
+            <div class="flex items-center gap-3 mb-8">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D4B55F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                <h1 class="text-2xl font-bold text-white">Hair<span class="text-yellow-500">Day</span></h1>
             </div>
 
-            <!-- Summary Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div class="card p-6 flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500">Saldo Líquido (Período)</p>
-                        <p id="net-balance" class="text-2xl sm:text-3xl font-bold">R$ 0,00</p>
-                    </div>
-                     <i class="fas fa-scale-balanced fa-2x text-blue-500"></i>
-                </div>
-                <div class="card p-6 flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500">Arrecadado (Período)</p>
-                        <p id="total-paid" class="text-2xl sm:text-3xl font-bold text-green-600">R$ 0,00</p>
-                    </div>
-                     <i class="fas fa-sack-dollar fa-2x text-green-500"></i>
-                </div>
-                <div class="card p-6 flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500">Pendente (Período)</p>
-                        <p id="total-unpaid" class="text-2xl sm:text-3xl font-bold text-orange-500">R$ 0,00</p>
-                    </div>
-                     <i class="fas fa-hand-holding-dollar fa-2x text-orange-400"></i>
-                </div>
-                <div class="card p-6 flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500">Gastos (Período)</p>
-                        <p id="period-expenses" class="text-2xl sm:text-3xl font-bold text-red-600">R$ 0,00</p>
-                    </div>
-                     <i class="fas fa-money-bill-transfer fa-2x text-red-500"></i>
-                </div>
-            </div>
-            
-            <!-- Filter Section -->
-            <div class="card p-4 mb-8">
-                <div class="flex flex-wrap items-center gap-4">
-                    <div class="flex-shrink-0 font-semibold">Filtrar por:</div>
-                    <div class="flex flex-wrap gap-2">
-                        <button class="filter-btn active px-4 py-2 rounded-lg text-sm" data-filter="all">Tudo</button>
-                        <button class="filter-btn px-4 py-2 rounded-lg text-sm" data-filter="day">Dia</button>
-                        <button class="filter-btn px-4 py-2 rounded-lg text-sm" data-filter="week">Semana</button>
-                        <button class="filter-btn px-4 py-2 rounded-lg text-sm" data-filter="month">Mês</button>
-                        <button class="filter-btn px-4 py-2 rounded-lg text-sm" data-filter="period">Período</button>
-                    </div>
-                </div>
-                <div id="filter-inputs" class="mt-4">
-                    <div id="day-filter-input" class="hidden">
-                        <input type="date" id="day-input" class="p-2 border border-gray-300 rounded-lg">
-                    </div>
-                    <div id="week-filter-input" class="hidden">
-                        <input type="week" id="week-input" class="p-2 border border-gray-300 rounded-lg">
-                    </div>
-                    <div id="month-filter-input" class="hidden">
-                        <select id="month-select" class="w-full sm:w-auto p-2 border border-gray-300 rounded-lg"></select>
-                    </div>
-                    <div id="period-filter-input" class="hidden flex flex-wrap gap-4 items-center">
-                        <input type="date" id="start-date-input" class="p-2 border border-gray-300 rounded-lg">
-                        <span>até</span>
-                        <input type="date" id="end-date-input" class="p-2 border border-gray-300 rounded-lg">
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Main Content Area -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 lg:gap-8">
-                <section id="appointments-section">
-                    <h2 class="text-2xl font-bold text-gray-700 mb-6">Agenda do Período</h2>
-                    <div id="appointments-list" class="space-y-4">
-                        <p id="empty-appointments" class="text-center text-gray-500 py-8">Nenhum agendamento encontrado.</p>
-                    </div>
-                </section>
-                <section id="expenses-section">
-                     <h2 class="text-2xl font-bold text-gray-700 mb-6">Gastos do Período</h2>
-                    <div id="expenses-list" class="space-y-4">
-                         <p id="empty-expenses" class="text-center text-gray-500 py-8">Nenhum gasto encontrado.</p>
-                    </div>
-                </section>
-            </div>
-        </div>
-    </div>
+            <h2 class="text-2xl font-bold text-white">Agende um atendimento</h2>
+            <p class="text-gray-400 mt-2 mb-6 text-sm">Selecione data, horário e informe o nome do cliente para criar o agendamento.</p>
 
-    <!-- Add/Edit Appointment Modal -->
-    <div id="appointment-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden opacity-0">
-        <div class="modal-container bg-white w-full max-w-lg p-6 rounded-xl shadow-lg transform scale-95">
-            <div class="flex justify-between items-center mb-4">
-                <h3 id="appointment-modal-title" class="text-xl font-bold text-gray-800"></h3>
-                <button id="close-appointment-modal-btn" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-            </div>
-            <form id="appointment-form">
-                <!-- Form content will be here -->
-            </form>
-        </div>
-    </div>
-    
-    <!-- Add Expense Modal -->
-    <div id="expense-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden opacity-0">
-        <div class="modal-container bg-white w-full max-w-lg p-6 rounded-xl shadow-lg transform scale-95">
-             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-800">Adicionar Gasto</h3>
-                <button id="close-expense-modal-btn" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-            </div>
-             <form id="add-expense-form" class="grid grid-cols-1 gap-4">
-                 <div>
-                    <label for="expense-description" class="block text-sm font-medium text-gray-600 mb-1">Descrição do Gasto</label>
-                    <input type="text" id="expense-description" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="Ex: Material de reposição" required>
+            <form id="booking-form" class="flex flex-col flex-grow">
+                <!-- Seletor de Data -->
+                <div class="mb-6">
+                    <label for="date" class="block text-sm font-medium text-gray-300 mb-2">Data</label>
+                    <input type="date" id="date" name="date" class="w-full bg-[#333] border border-gray-600 rounded-lg p-2.5 text-white focus:ring-yellow-500 focus:border-yellow-500">
                 </div>
-                <div>
-                    <label for="expense-value" class="block text-sm font-medium text-gray-600 mb-1">Valor do Gasto (R$)</label>
-                    <input type="text" inputmode="decimal" id="expense-value" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="R$ 0,00" required>
+
+                <!-- Seletor de Horários -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Horários</label>
+                    <div id="time-slots" class="space-y-4">
+                        <!-- Manhã -->
+                        <div>
+                            <p class="text-xs text-gray-400 mb-2">Manhã</p>
+                            <div class="grid grid-cols-4 gap-2">
+                                <button type="button" data-time="09:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">09:00</button>
+                                <button type="button" data-time="10:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">10:00</button>
+                                <button type="button" data-time="11:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">11:00</button>
+                                <button type="button" data-time="12:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">12:00</button>
+                            </div>
+                        </div>
+                        <!-- Tarde -->
+                        <div>
+                            <p class="text-xs text-gray-400 mb-2">Tarde</p>
+                            <div class="grid grid-cols-4 gap-2">
+                                <button type="button" data-time="13:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">13:00</button>
+                                <button type="button" data-time="14:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">14:00</button>
+                                <button type="button" data-time="15:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">15:00</button>
+                                <button type="button" data-time="16:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">16:00</button>
+                                <button type="button" data-time="17:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">17:00</button>
+                                <button type="button" data-time="18:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">18:00</button>
+                            </div>
+                        </div>
+                        <!-- Noite -->
+                        <div>
+                            <p class="text-xs text-gray-400 mb-2">Noite</p>
+                            <div class="grid grid-cols-4 gap-2">
+                                <button type="button" data-time="19:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">19:00</button>
+                                <button type="button" data-time="20:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">20:00</button>
+                                <button type="button" data-time="21:00" class="time-slot border border-gray-600 rounded-lg p-2 text-sm">21:00</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label for="expense-date" class="block text-sm font-medium text-gray-600 mb-1">Data do Gasto</label>
-                    <input type="date" id="expense-date" class="w-full p-3 border border-gray-300 rounded-lg" required>
+
+                <!-- Campo do Cliente -->
+                <div class="mb-6">
+                    <label for="client-name" class="block text-sm font-medium text-gray-300 mb-2">Cliente</label>
+                    <div class="relative">
+                         <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        </div>
+                        <input type="text" id="client-name" name="client-name" class="w-full bg-[#333] border border-gray-600 rounded-lg p-2.5 pl-10 text-white focus:ring-yellow-500 focus:border-yellow-500" placeholder="Nome do cliente" required>
+                    </div>
                 </div>
-                <div class="text-right">
-                    <button type="submit" class="btn-primary font-bold w-full md:w-auto py-3 px-6 rounded-lg shadow-md">
-                        <i class="fas fa-plus mr-2"></i>Adicionar Gasto
+
+                <!-- Botão Agendar -->
+                <div class="mt-auto">
+                    <button type="submit" id="submit-button" class="w-full bg-[#D4B55F] text-[#111] font-bold py-3 rounded-lg hover:bg-yellow-500 transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed">
+                        AGENDAR
                     </button>
                 </div>
             </form>
         </div>
-    </div>
-    
-    <!-- Manage Services Modal -->
-    <div id="manage-services-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden opacity-0">
-        <div class="modal-container bg-white w-full max-w-lg p-6 rounded-xl shadow-lg transform scale-95">
-             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-800">Gerenciar Serviços</h3>
-                <button id="close-services-modal-btn" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-            </div>
-            <div id="services-list-container" class="space-y-2 mb-4 max-h-64 overflow-y-auto">
-                <!-- Lista de serviços gerenciáveis -->
-            </div>
-            <form id="add-service-form" class="flex gap-2">
-                <input type="text" id="new-service-name" placeholder="Nome do Serviço" class="w-full p-2 border border-gray-300 rounded-lg" required>
-                <input type="text" id="new-service-price" placeholder="Preço" class="w-1/3 p-2 border border-gray-300 rounded-lg" required>
-                <button type="submit" class="btn-primary px-4 py-2 rounded-lg text-sm">Adicionar</button>
-            </form>
-        </div>
-    </div>
 
+        <!-- Coluna da Agenda (Direita) -->
+        <div class="lg:col-span-3 p-8">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Sua agenda</h2>
+                    <p class="text-gray-400 mt-1 text-sm">Consulte os seus cortes de cabelo agendados por dia.</p>
+                </div>
+                <input type="date" id="view-date" name="view-date" class="bg-[#252525] border border-gray-600 rounded-lg p-2.5 text-white focus:ring-yellow-500 focus:border-yellow-500">
+            </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div id="delete-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden opacity-0">
-        <div class="modal-container bg-white w-full max-w-md p-6 rounded-xl shadow-lg transform scale-95">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">Confirmar Exclusão</h3>
-            <p id="delete-modal-text" class="text-gray-600 mb-6"></p>
-            <div class="flex justify-end space-x-4">
-                <button id="cancel-delete-btn" class="py-2 px-5 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold">Cancelar</button>
-                <button id="confirm-delete-btn" class="btn-danger py-2 px-5 rounded-lg font-semibold">Excluir</button>
+            <div id="schedule-view" class="space-y-8">
+                <!-- Dados serão inseridos dinamicamente aqui -->
             </div>
         </div>
     </div>
 
-    <!-- Lógica do App com LocalStorage -->
+    <!-- Modal de Notificação -->
+    <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-[#252525] rounded-xl shadow-lg p-8 max-w-sm w-full text-center border-t-4 border-yellow-500">
+            <h3 id="notification-title" class="text-xl font-bold text-white mb-2"></h3>
+            <p id="notification-message" class="text-gray-300 mb-6"></p>
+            <button id="notification-close" class="bg-yellow-500 text-black font-bold px-6 py-2 rounded-lg hover:bg-yellow-600 transition-colors">OK</button>
+        </div>
+    </div>
+
+
     <script>
-        // --- SCRIPT EXECUTADO IMEDIATAMENTE (IIFE) ---
-        (() => {
-            // --- LOGIN ELEMENTS ---
-            const loginPage = document.getElementById('login-page');
-            const appPage = document.getElementById('app-page');
-            const loginForm = document.getElementById('login-form');
-            const usernameInput = document.getElementById('username');
-            const passwordInput = document.getElementById('password');
-            const loginError = document.getElementById('login-error');
-            const logoutBtn = document.getElementById('logout-btn');
+        document.addEventListener('DOMContentLoaded', () => {
+            // Elementos da UI
+            const appState = {
+                bookings: {
+                    '2025-06-20': [ // Data de hoje como exemplo
+                        { time: '11:00', client: 'Ryan Stewart' },
+                        { time: '13:00', client: 'Livia Curtis' },
+                        { time: '14:00', client: 'Randy Calzoni' },
+                        { time: '16:00', client: 'Marley Franci' },
+                        { time: '17:00', client: 'Jaylon Korigaard' },
+                        { time: '21:00', client: 'Maria Heinitz' },
+                    ]
+                },
+                selectedDate: null,
+                selectedTime: null,
+            };
 
-            // --- APP ELEMENTS ---
-            let itemToDelete = null; 
-            let allAppointments = [];
-            let allExpenses = [];
-            let serviceOptions = [];
-            let currentFilterType = 'all';
+            const bookingForm = document.getElementById('booking-form');
+            const dateInput = document.getElementById('date');
+            const timeSlotsContainer = document.getElementById('time-slots');
+            const clientNameInput = document.getElementById('client-name');
+            const submitButton = document.getElementById('submit-button');
 
-            // Forms
-            const appointmentForm = document.getElementById('appointment-form');
-            const addExpenseForm = document.getElementById('add-expense-form');
-            const addServiceForm = document.getElementById('add-service-form');
-
-            // Lists
-            const appointmentsList = document.getElementById('appointments-list');
-            const expensesList = document.getElementById('expenses-list');
-            const emptyAppointmentsEl = document.getElementById('empty-appointments');
-            const emptyExpensesEl = document.getElementById('empty-expenses');
-
-            // Summary
-            const netBalanceEl = document.getElementById('net-balance');
-            const totalPaidEl = document.getElementById('total-paid');
-            const totalUnpaidEl = document.getElementById('total-unpaid');
-            const periodExpensesEl = document.getElementById('period-expenses');
+            const viewDateInput = document.getElementById('view-date');
+            const scheduleView = document.getElementById('schedule-view');
             
-            // Filters
-            const filterButtons = document.querySelectorAll('.filter-btn');
-            const dayInput = document.getElementById('day-input');
-            const weekInput = document.getElementById('week-input');
-            const monthSelect = document.getElementById('month-select');
-            const startDateInput = document.getElementById('start-date-input');
-            const endDateInput = document.getElementById('end-date-input');
+            const notificationModal = document.getElementById('notification-modal');
+            const notificationTitle = document.getElementById('notification-title');
+            const notificationMessage = document.getElementById('notification-message');
+            const notificationCloseBtn = document.getElementById('notification-close');
 
-            // Modals
-            const deleteModal = document.getElementById('delete-modal');
-            const deleteModalText = document.getElementById('delete-modal-text');
-            const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
-            const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+            // --- FUNÇÕES ---
 
-            const appointmentModal = document.getElementById('appointment-modal');
-            const appointmentModalTitle = document.getElementById('appointment-modal-title');
-            const closeAppointmentModalBtn = document.getElementById('close-appointment-modal-btn');
-            const addAppointmentModalBtn = document.getElementById('add-appointment-modal-btn');
-
-            const expenseModal = document.getElementById('expense-modal');
-            const closeExpenseModalBtn = document.getElementById('close-expense-modal-btn');
-            const addExpenseModalBtn = document.getElementById('add-expense-modal-btn');
+            // Converte data para o formato YYYY-MM-DD
+            function toISODateString(date) {
+                return new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+            }
             
-            const manageServicesModal = document.getElementById('manage-services-modal');
-            const manageServicesBtn = document.getElementById('manage-services-btn');
-            const closeServicesModalBtn = document.getElementById('close-services-modal-btn');
-            const servicesListContainer = document.getElementById('services-list-container');
-            const newServiceNameInput = document.getElementById('new-service-name');
-            const newServicePriceInput = document.getElementById('new-service-price');
-            
-            // --- HELPER FUNCTIONS ---
-            const getFromStorage = (key, defaultValue = []) => JSON.parse(localStorage.getItem(key)) || defaultValue;
-            const saveToStorage = (key, data) => localStorage.setItem(key, JSON.stringify(data));
-            const getAppointments = () => getFromStorage('nailAppointments').sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
-            const saveAppointments = (data) => saveToStorage('nailAppointments', data);
-            const getExpenses = () => getFromStorage('nailExpenses').sort((a, b) => new Date(b.date) - new Date(a.date));
-            const saveExpenses = (data) => saveToStorage('nailExpenses', data);
-            const getServices = () => getFromStorage('nailServices', [
-                { id: crypto.randomUUID(), name: "Unha em Gel", price: 80.00 },
-                { id: crypto.randomUUID(), name: "Esmaltação em Gel", price: 50.00 },
-                { id: crypto.randomUUID(), name: "Fibra de Vidro", price: 120.00 },
-                { id: crypto.randomUUID(), name: "Mão", price: 25.00 },
-                { id: crypto.randomUUID(), name: "Pé", price: 30.00 },
-                { id: crypto.randomUUID(), name: "Pé e Mão", price: 50.00 },
-                { id: crypto.randomUUID(), name: "Alongamento", price: 100.00 }
-            ]);
-            const saveServices = (data) => saveToStorage('nailServices', data);
-
-            function parseCurrency(valueStr) {
-                if (!valueStr || typeof valueStr !== 'string') return 0;
-                const number = parseFloat(valueStr.replace(/\./g, '').replace(',', '.').trim());
-                return isNaN(number) ? 0 : number;
+            // Exibe o modal de notificação
+            function showNotification(title, message) {
+                notificationTitle.textContent = title;
+                notificationMessage.textContent = message;
+                notificationModal.classList.remove('hidden');
             }
 
-            function formatCurrency(number) {
-                 return number.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            }
+            // Esconde o modal
+            notificationCloseBtn.addEventListener('click', () => {
+                notificationModal.classList.add('hidden');
+            });
+            
+            // Atualiza os horários disponíveis no formulário
+            function updateAvailableTimes() {
+                const date = appState.selectedDate;
+                if (!date) return;
 
-            function setupCurrencyInput(inputElement) {
-                inputElement.addEventListener('input', (e) => {
-                    let value = e.target.value.replace(/\D/g, '');
-                    if (value === '') { e.target.value = ''; return; }
-                    value = (parseInt(value, 10) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    e.target.value = value;
+                const todaysBookings = appState.bookings[date] || [];
+                const bookedTimes = todaysBookings.map(b => b.time);
+
+                document.querySelectorAll('.time-slot').forEach(slot => {
+                    slot.classList.remove('disabled', 'selected');
+                    if (bookedTimes.includes(slot.dataset.time)) {
+                        slot.classList.add('disabled');
+                        slot.disabled = true;
+                    } else {
+                        slot.disabled = false;
+                    }
+
+                    if (slot.dataset.time === appState.selectedTime) {
+                         slot.classList.add('selected');
+                    }
                 });
             }
-
-
-            // --- INITIALIZATION ---
-            function showApp() {
-                loginPage.classList.add('hidden');
-                appPage.classList.remove('hidden');
-                document.body.classList.remove('flex', 'items-center', 'justify-center', 'h-full');
-                loadInitialData();
-            }
-
-            function showLogin() {
-                appPage.classList.add('hidden');
-                loginPage.classList.remove('hidden');
-                document.body.classList.add('flex', 'items-center', 'justify-center', 'h-full');
-            }
             
-            function loadInitialData() {
-                serviceOptions = getServices();
-                allAppointments = getAppointments();
-                allExpenses = getExpenses();
-                populateMonthFilter();
-                filterAndRender();
-            }
-
-            // --- LOGIN & LOGOUT LOGIC ---
-            loginForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                if (usernameInput.value === 'Dry2510' && passwordInput.value === '2510Dry') {
-                    sessionStorage.setItem('isLoggedIn', 'true');
-                    showApp();
-                } else {
-                    loginError.classList.remove('hidden');
-                    passwordInput.value = '';
+            // Renderiza a visualização da agenda para a data selecionada
+            function renderScheduleView(date) {
+                scheduleView.innerHTML = ''; // Limpa a visualização
+                if (!date) {
+                    scheduleView.innerHTML = `<p class="text-gray-500 text-center">Selecione uma data para ver os agendamentos.</p>`;
+                    return;
                 }
-            });
-            
-            logoutBtn.addEventListener('click', () => {
-                sessionStorage.removeItem('isLoggedIn');
-                showLogin();
-            });
-            
-            if (sessionStorage.getItem('isLoggedIn') === 'true') {
-                showApp();
-            } else {
-                showLogin();
-            }
 
-            // --- FORM RENDERING ---
-            function renderAppointmentForm(appointment = {}) {
-                const isEdit = !!appointment.id;
-                appointmentModalTitle.textContent = isEdit ? 'Editar Agendamento' : 'Novo Agendamento';
-                appointmentForm.innerHTML = `
-                    <input type="hidden" name="id" value="${appointment.id || ''}">
-                    <div class="space-y-4">
-                        <div>
-                            <label for="clientName" class="block text-sm font-medium text-gray-600 mb-1">Nome da Cliente</label>
-                            <input type="text" id="clientName" name="clientName" class="w-full p-3 border border-gray-300 rounded-lg" value="${appointment.clientName || ''}" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Serviços</label>
-                            <div id="service-checkboxes" class="p-2 border rounded-lg service-checkbox-container grid grid-cols-2 gap-2">
-                               ${serviceOptions.map(service => `
-                                    <label class="flex items-center space-x-2">
-                                        <input type="checkbox" name="services" value="${service.name}" data-price="${service.price}" ${(appointment.services || []).includes(service.name) ? 'checked' : ''}>
-                                        <span>${service.name}</span>
-                                    </label>
-                               `).join('')}
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                             <div>
-                                <label for="value" class="block text-sm font-medium text-gray-600 mb-1">Valor (R$)</label>
-                                <input type="text" inputmode="decimal" id="value" name="value" class="w-full p-3 border border-gray-300 rounded-lg" value="${appointment.value ? appointment.value.toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '0,00'}" required>
-                            </div>
-                            <div>
-                                <label for="dateTime" class="block text-sm font-medium text-gray-600 mb-1">Data e Hora</label>
-                                <input type="datetime-local" id="dateTime" name="dateTime" class="w-full p-3 border border-gray-300 rounded-lg" value="${appointment.dateTime || ''}" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-6 text-right">
-                        <button type="submit" class="btn-primary font-bold w-full md:w-auto py-3 px-6 rounded-lg shadow-md">
-                            <i class="fas fa-save mr-2"></i>${isEdit ? 'Salvar Alterações' : 'Adicionar Agendamento'}
-                        </button>
-                    </div>`;
-
-                const valueInput = appointmentForm.querySelector('input[name="value"]');
-                setupCurrencyInput(valueInput);
+                const todaysBookings = appState.bookings[date] || [];
+                if (todaysBookings.length === 0) {
+                    scheduleView.innerHTML = `<p class="text-gray-500 text-center">Nenhum agendamento para esta data.</p>`;
+                    return;
+                }
                 
-                appointmentForm.querySelector(`#service-checkboxes`).addEventListener('change', () => {
-                    const checkboxes = appointmentForm.querySelectorAll('input[name="services"]:checked');
-                    const total = Array.from(checkboxes).reduce((sum, cb) => sum + parseFloat(cb.dataset.price), 0);
-                    valueInput.value = total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                // Agrupa por período
+                const periods = {
+                    Manhã: { range: '09h-12h', bookings: [] },
+                    Tarde: { range: '13h-18h', bookings: [] },
+                    Noite: { range: '19h-21h', bookings: [] },
+                };
+
+                todaysBookings.sort((a, b) => a.time.localeCompare(b.time)).forEach(booking => {
+                    const hour = parseInt(booking.time.split(':')[0]);
+                    if (hour >= 9 && hour <= 12) periods.Manhã.bookings.push(booking);
+                    else if (hour >= 13 && hour <= 18) periods.Tarde.bookings.push(booking);
+                    else if (hour >= 19 && hour <= 21) periods.Noite.bookings.push(booking);
+                });
+
+                Object.entries(periods).forEach(([periodName, data]) => {
+                    if(data.bookings.length > 0) {
+                        const periodEl = document.createElement('div');
+                        periodEl.innerHTML = `
+                            <div class="flex items-center gap-4 mb-4 border-b border-gray-700 pb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4B55F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="M12 6v6l4 2"></path></svg>
+                                <h3 class="text-lg font-semibold text-white">${periodName}</h3>
+                                <span class="text-sm text-gray-400 ml-auto">${data.range}</span>
+                            </div>
+                            <div class="space-y-3 pl-9">
+                                ${data.bookings.map(b => `
+                                    <div class="flex items-center">
+                                        <p class="font-semibold text-white w-20">${b.time}</p>
+                                        <p class="text-gray-300">${b.client}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                        scheduleView.appendChild(periodEl);
+                    }
                 });
             }
-
 
             // --- EVENT LISTENERS ---
-            appointmentForm.addEventListener('submit', (e) => {
+
+            // Seleciona a data no formulário
+            dateInput.addEventListener('change', (e) => {
+                appState.selectedDate = e.target.value;
+                appState.selectedTime = null; // Reseta o horário ao mudar a data
+                document.querySelectorAll('.time-slot.selected').forEach(el => el.classList.remove('selected'));
+                updateAvailableTimes();
+            });
+
+            // Seleciona o horário no formulário
+            timeSlotsContainer.addEventListener('click', (e) => {
+                const button = e.target.closest('.time-slot');
+                if (button && !button.disabled) {
+                    // Desmarca o anterior
+                    const prevSelected = timeSlotsContainer.querySelector('.selected');
+                    if(prevSelected) prevSelected.classList.remove('selected');
+                    
+                    // Marca o novo
+                    button.classList.add('selected');
+                    appState.selectedTime = button.dataset.time;
+                }
+            });
+
+            // Submete o formulário de agendamento
+            bookingForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                const formData = new FormData(e.target);
-                const appointmentId = formData.get('id');
-                const value = parseCurrency(formData.get('value'));
+                const clientName = clientNameInput.value.trim();
 
-                if (formData.get('clientName') && !isNaN(value) && formData.get('dateTime')) {
-                    let appointments = getAppointments();
-                    if (appointmentId) { // Editing
-                        const index = appointments.findIndex(a => a.id === appointmentId);
-                        if (index > -1) {
-                            appointments[index] = { ...appointments[index], clientName: formData.get('clientName'), services: formData.getAll('services'), value, dateTime: formData.get('dateTime') };
-                        }
-                    } else { // Adding
-                        const newAppointment = { id: crypto.randomUUID(), clientName: formData.get('clientName'), services: formData.getAll('services'), value, dateTime: formData.get('dateTime'), isPaid: false, createdAt: new Date().toISOString() };
-                        appointments.unshift(newAppointment);
-                    }
-                    saveAppointments(appointments);
-                    hideAppointmentModal();
-                    loadInitialData();
+                if (!appState.selectedDate || !appState.selectedTime || !clientName) {
+                    showNotification("Erro", "Por favor, preencha todos os campos: data, horário e nome do cliente.");
+                    return;
                 }
-            });
 
-            addExpenseForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const value = parseCurrency(document.getElementById('expense-value').value);
-                const description = document.getElementById('expense-description').value;
-                const date = document.getElementById('expense-date').value;
-
-                if(description && !isNaN(value) && date) {
-                    saveExpenses([{ id: crypto.randomUUID(), description, value, date }, ...getExpenses()]);
-                    addExpenseForm.reset();
-                    hideExpenseModal();
-                    loadInitialData();
+                // Adiciona o agendamento
+                if (!appState.bookings[appState.selectedDate]) {
+                    appState.bookings[appState.selectedDate] = [];
                 }
-            });
-
-            // --- GENERIC ACTIONS ---
-            function markAsPaid(id) {
-                const appointments = getAppointments();
-                const appointmentIndex = appointments.findIndex(a => a.id === id);
-                if (appointmentIndex > -1) {
-                    appointments[appointmentIndex].isPaid = true;
-                    saveAppointments(appointments);
-                    loadInitialData();
-                }
-            }
-
-            function deleteItem(item) {
-                if (item.type === 'appointment') saveAppointments(getAppointments().filter(a => a.id !== item.id));
-                else if (item.type === 'expense') saveExpenses(getExpenses().filter(e => e.id !== item.id));
-                loadInitialData();
-            }
-            
-            // --- FILTERING LOGIC ---
-            filterButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    filterButtons.forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
-                    currentFilterType = button.dataset.filter;
-                    updateFilterInputsVisibility();
-                    filterAndRender();
+                appState.bookings[appState.selectedDate].push({
+                    time: appState.selectedTime,
+                    client: clientName,
                 });
-            });
 
-            [dayInput, weekInput, monthSelect, startDateInput, endDateInput].forEach(input => {
-                input.addEventListener('change', filterAndRender);
-            });
-
-            function updateFilterInputsVisibility() {
-                const inputs = [document.getElementById('day-filter-input'), document.getElementById('week-filter-input'), document.getElementById('month-filter-input'), document.getElementById('period-filter-input')];
-                inputs.forEach(el => el.classList.add('hidden'));
-                const mapping = { day: document.getElementById('day-filter-input'), week: document.getElementById('week-filter-input'), month: document.getElementById('month-filter-input'), period: document.getElementById('period-filter-input') };
-                if (mapping[currentFilterType]) mapping[currentFilterType].classList.remove('hidden');
-            }
-
-            function filterAndRender() {
-                let filteredAppointments = allAppointments;
-                let filteredExpenses = allExpenses;
-
-                if (currentFilterType === 'day' && dayInput.value) {
-                    filteredAppointments = allAppointments.filter(a => a.dateTime.startsWith(dayInput.value));
-                    filteredExpenses = allExpenses.filter(e => e.date === dayInput.value);
-                } else if (currentFilterType === 'week' && weekInput.value) {
-                    const { start, end } = getWeekDateRange(weekInput.value);
-                    filteredAppointments = allAppointments.filter(a => { const d = new Date(a.dateTime); return d >= start && d <= end; });
-                    filteredExpenses = allExpenses.filter(e => { const d = new Date(e.date + "T00:00:00"); return d >= start && d <= end; });
-                } else if (currentFilterType === 'month' && monthSelect.value !== 'all') {
-                    filteredAppointments = allAppointments.filter(a => a.dateTime.startsWith(monthSelect.value));
-                    filteredExpenses = allExpenses.filter(e => e.date.startsWith(monthSelect.value));
-                } else if (currentFilterType === 'period' && startDateInput.value && endDateInput.value) {
-                    const start = new Date(startDateInput.value + "T00:00:00");
-                    const end = new Date(endDateInput.value + "T23:59:59");
-                    filteredAppointments = allAppointments.filter(a => { const d = new Date(a.dateTime); return d >= start && d <= end; });
-                    filteredExpenses = allExpenses.filter(e => { const d = new Date(e.date + "T00:00:00"); return d >= start && d <= end; });
+                // Atualiza a UI
+                if (appState.selectedDate === viewDateInput.value) {
+                    renderScheduleView(appState.selectedDate);
                 }
+                updateAvailableTimes();
 
-                renderGroupedAppointments(filteredAppointments);
-                renderExpenses(filteredExpenses);
-                updatePeriodSummary(filteredAppointments, filteredExpenses);
-            }
-            
-            // --- UI RENDERING ---
-            function populateMonthFilter() {
-                const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-                const appointmentMonths = allAppointments.map(a => a.dateTime.substring(0, 7));
-                const expenseMonths = allExpenses.map(e => e.date.substring(0, 7));
-                const uniqueMonths = [...new Set([...appointmentMonths, ...expenseMonths])].sort().reverse();
+                // Limpa o formulário
+                bookingForm.reset();
+                timeSlotsContainer.querySelector('.selected')?.classList.remove('selected');
+                appState.selectedTime = null;
                 
-                monthSelect.innerHTML = '<option value="all">Selecione o Mês</option>';
-                uniqueMonths.forEach(monthYear => {
-                    const [year, month] = monthYear.split('-');
-                    const option = document.createElement('option');
-                    option.value = monthYear;
-                    option.textContent = `${monthNames[parseInt(month) - 1]} de ${year}`;
-                    monthSelect.appendChild(option);
-                });
-            }
-            
-            function renderGroupedAppointments(appointments) {
-                appointmentsList.innerHTML = '';
-                emptyAppointmentsEl.style.display = appointments.length > 0 ? 'none' : 'block';
-
-                const grouped = appointments.reduce((acc, curr) => {
-                    const date = curr.dateTime.split('T')[0];
-                    if (!acc[date]) acc[date] = [];
-                    acc[date].push(curr);
-                    return acc;
-                }, {});
-
-                for(const dateStr in grouped) {
-                    const dayAppointments = grouped[dateStr];
-                    const date = new Date(dateStr + 'T03:00:00');
-                    const today = new Date();
-                    const isToday = date.toDateString() === today.toDateString();
-
-                    const header = document.createElement('div');
-                    header.className = `day-header p-2 rounded-lg font-bold text-lg mb-2 sticky top-0 z-10 ${isToday ? 'today' : ''}`;
-                    header.textContent = date.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                    appointmentsList.appendChild(header);
-
-                    dayAppointments.forEach(appt => appointmentsList.appendChild(createCard(appt, 'appointment')));
-                }
-            }
-
-            function renderExpenses(expenses) {
-                expensesList.innerHTML = '';
-                emptyExpensesEl.style.display = expenses.length > 0 ? 'none' : 'block';
-                expenses.forEach(exp => expensesList.appendChild(createCard(exp, 'expense')));
-            }
-
-            function createCard(item, type) {
-                const card = document.createElement('div');
-                let innerHTML = '';
-
-                if (type === 'appointment') {
-                    card.className = `card p-5 ${item.isPaid ? 'paid-card' : 'unpaid-card'}`;
-                    const formattedTime = new Date(item.dateTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                    innerHTML = `
-                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                            <div class="flex-1">
-                                <p class="font-bold text-lg text-pink-700">${item.clientName}</p>
-                                <div class="text-gray-600 text-sm">${item.services.join(', ')}</div>
-                                <div class="flex flex-col sm:flex-row items-start sm:items-center text-sm text-gray-500 mt-2 gap-x-2">
-                                    <span class="flex items-center"><i class="fas fa-clock mr-2"></i>${formattedTime}</span>
-                                    <span class="hidden sm:inline">|</span>
-                                    <span class="flex items-center"><i class="fas fa-money-bill-wave mr-2"></i>${formatCurrency(item.value)}</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center space-x-2 w-full md:w-auto">
-                                ${!item.isPaid ? `<button title="Marcar como Pago" class="btn-secondary font-semibold py-2 px-3 rounded-lg flex-1 md:flex-none mark-paid-btn"><i class="fas fa-check"></i></button>` : `<span class="font-bold text-green-600 text-center flex-1 p-2"><i class="fas fa-check-circle"></i> Pago</span>`}
-                                <button title="Editar" class="text-blue-500 hover:text-blue-700 py-2 px-3 rounded-lg edit-btn"><i class="fas fa-pencil-alt"></i></button>
-                                <button title="Excluir" class="text-red-500 hover:text-red-700 py-2 px-3 rounded-lg delete-btn"><i class="fas fa-trash-alt"></i></button>
-                            </div>
-                        </div>`;
-                } else { // type === 'expense'
-                    card.className = 'card p-5 border-l-4 border-red-500';
-                    const formattedDate = new Date(item.date + 'T03:00:00').toLocaleDateString('pt-BR', {dateStyle: 'short'});
-                    innerHTML = `
-                        <div class="flex justify-between items-center gap-4">
-                             <div class="flex-1">
-                                <p class="font-bold text-gray-800">${item.description}</p>
-                                <div class="flex items-center text-sm text-gray-500 mt-2">
-                                    <i class="fas fa-calendar-alt mr-2"></i><span>${formattedDate}</span>
-                                    <span class="mx-2">|</span>
-                                    <span class="text-red-600 font-semibold">${formatCurrency(item.value)}</span>
-                                </div>
-                            </div>
-                            <button class="text-red-500 hover:text-red-700 py-2 px-4 rounded-lg delete-btn"><i class="fas fa-trash-alt"></i></button>
-                        </div>`;
-                }
-                card.innerHTML = innerHTML;
-                
-                const markPaidBtn = card.querySelector('.mark-paid-btn');
-                if (markPaidBtn) markPaidBtn.addEventListener('click', () => markAsPaid(item.id));
-                card.querySelector('.delete-btn').addEventListener('click', () => showDeleteModal({id: item.id, type}));
-                const editBtn = card.querySelector('.edit-btn');
-                if (editBtn) editBtn.addEventListener('click', () => showAppointmentModal(item.id));
-                
-                return card;
-            }
-
-            // --- SUMMARY UI ---
-            function updatePeriodSummary(appointments, expenses) {
-                const paidTotal = appointments.filter(a => a.isPaid).reduce((sum, a) => sum + a.value, 0);
-                const unpaidTotal = appointments.filter(a => !a.isPaid).reduce((sum, a) => sum + a.value, 0);
-                const expensesTotal = expenses.reduce((sum, e) => sum + e.value, 0);
-                const netBalance = (paidTotal + unpaidTotal) - expensesTotal;
-
-                netBalanceEl.textContent = formatCurrency(netBalance);
-                netBalanceEl.classList.remove('text-green-600', 'text-red-600', 'text-blue-500');
-                if (netBalance > 0) netBalanceEl.classList.add('text-green-600');
-                else if (netBalance < 0) netBalanceEl.classList.add('text-red-600');
-                else netBalanceEl.classList.add('text-blue-500');
-
-                totalPaidEl.textContent = formatCurrency(paidTotal);
-                totalUnpaidEl.textContent = formatCurrency(unpaidTotal);
-                periodExpensesEl.textContent = formatCurrency(expensesTotal);
-            }
-
-            // --- MODAL HANDLING ---
-            function showAppointmentModal(id = null) {
-                const appointment = id ? getAppointments().find(a => a.id === id) : {};
-                renderAppointmentForm(appointment);
-                appointmentModal.classList.remove('hidden');
-                setTimeout(() => appointmentModal.classList.remove('opacity-0'), 10);
-            }
-            function hideAppointmentModal() {
-                 appointmentModal.classList.add('opacity-0');
-                 setTimeout(() => appointmentModal.classList.add('hidden'), 300);
-            }
-            addAppointmentModalBtn.addEventListener('click', () => showAppointmentModal());
-            closeAppointmentModalBtn.addEventListener('click', hideAppointmentModal);
-
-            function showExpenseModal() {
-                expenseModal.classList.remove('hidden');
-                setTimeout(() => expenseModal.classList.remove('opacity-0'), 10);
-            }
-            function hideExpenseModal() {
-                 expenseModal.classList.add('opacity-0');
-                 setTimeout(() => expenseModal.classList.add('hidden'), 300);
-            }
-            addExpenseModalBtn.addEventListener('click', showExpenseModal);
-            closeExpenseModalBtn.addEventListener('click', hideExpenseModal);
-
-
-            function showDeleteModal(item) {
-                itemToDelete = item;
-                const itemType = item.type === 'appointment' ? 'o agendamento' : 'o gasto';
-                deleteModalText.textContent = `Tem certeza que deseja excluir ${itemType}? Esta ação não pode ser desfeita.`;
-                deleteModal.classList.remove('hidden');
-                setTimeout(() => deleteModal.classList.remove('opacity-0'), 10);
-            }
-            function hideDeleteModal() {
-                deleteModal.classList.add('opacity-0');
-                setTimeout(() => { deleteModal.classList.add('hidden'); itemToDelete = null; }, 300);
-            }
-            cancelDeleteBtn.addEventListener('click', hideDeleteModal);
-            confirmDeleteBtn.addEventListener('click', () => {
-                if (itemToDelete) deleteItem(itemToDelete);
-                hideDeleteModal();
+                showNotification("Sucesso!", "Agendamento realizado com sucesso.");
             });
             
-            // --- MANAGE SERVICES MODAL ---
-            manageServicesBtn.addEventListener('click', () => {
-                renderServicesList();
-                manageServicesModal.classList.remove('hidden');
-                setTimeout(() => manageServicesModal.classList.remove('opacity-0'), 10);
-            });
-            closeServicesModalBtn.addEventListener('click', () => {
-                 manageServicesModal.classList.add('opacity-0');
-                 setTimeout(() => manageServicesModal.classList.add('hidden'), 300);
-                 loadInitialData(); // Recarregar formulários com novos serviços
+            // Muda a data de visualização da agenda
+            viewDateInput.addEventListener('change', (e) => {
+                renderScheduleView(e.target.value);
             });
 
-            function renderServicesList() {
-                servicesListContainer.innerHTML = '';
-                getServices().forEach(service => {
-                    const div = document.createElement('div');
-                    div.className = 'flex items-center gap-2';
-                    div.innerHTML = `
-                        <input type="text" value="${service.name}" data-id="${service.id}" class="w-full p-2 border border-gray-200 rounded-lg service-name-input">
-                        <input type="text" value="${service.price.toLocaleString('pt-BR', {minimumFractionDigits: 2})}" data-id="${service.id}" class="w-1/3 p-2 border border-gray-200 rounded-lg service-price-input">
-                        <button data-id="${service.id}" class="text-red-500 hover:text-red-700 p-2 delete-service-btn">&times;</button>
-                    `;
-                    servicesListContainer.appendChild(div);
-                    setupCurrencyInput(div.querySelector('.service-price-input'));
-                });
+            // --- INICIALIZAÇÃO ---
+            function init() {
+                const today = new Date();
+                const todayString = toISODateString(today);
                 
-                document.querySelectorAll('.service-name-input, .service-price-input').forEach(input => {
-                    input.addEventListener('change', (e) => {
-                        const id = e.target.dataset.id;
-                        const services = getServices();
-                        const serviceIndex = services.findIndex(s => s.id === id);
-                        if (serviceIndex > -1) {
-                            if (e.target.classList.contains('service-price-input')) {
-                                services[serviceIndex].price = parseCurrency(e.target.value);
-                            } else {
-                                services[serviceIndex].name = e.target.value;
-                            }
-                            saveServices(services);
-                            serviceOptions = services; // update global state
-                        }
-                    });
-                });
+                // Define as datas nos inputs
+                dateInput.value = todayString;
+                dateInput.min = todayString;
+                viewDateInput.value = todayString;
                 
-                document.querySelectorAll('.delete-service-btn').forEach(button => {
-                   button.addEventListener('click', (e) => {
-                       const id = e.target.closest('button').dataset.id;
-                       saveServices(getServices().filter(s => s.id !== id));
-                       loadInitialData();
-                       renderServicesList();
-                   })
-                });
+                appState.selectedDate = todayString;
+
+                // Renderiza a UI inicial
+                updateAvailableTimes();
+                renderScheduleView(todayString);
             }
-
-            addServiceForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const name = newServiceNameInput.value;
-                const price = parseCurrency(newServicePriceInput.value);
-                if(name && !isNaN(price)) {
-                    saveServices([...getServices(), {id: crypto.randomUUID(), name, price}]);
-                    addServiceForm.reset();
-                    loadInitialData();
-                    renderServicesList();
-                }
-            });
-
-            // --- HELPERS ---
-            function getWeekDateRange(weekString) {
-                const [year, weekNum] = weekString.split('-W').map(Number);
-                const d = new Date("Jan 01, " + year + " 01:00:00");
-                const w = d.getTime() + 604800000 * (weekNum - 1);
-                const start = new Date(w);
-                const end = new Date(w + 518400000);
-                return { start, end };
-            }
-
-            // --- SETUP GLOBAL INPUTS ---
-            setupCurrencyInput(newServicePriceInput);
-            setupCurrencyInput(document.getElementById('expense-value'));
-
-        })();
+            
+            init();
+        });
     </script>
 </body>
 </html>
